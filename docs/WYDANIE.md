@@ -62,7 +62,7 @@ Archiwum `tar.gz` testuj tak samo (`alpine:3`, `debian:12`): rozpakuj, uruchom `
 4. Zrób tag, **sprawdź, że wskazuje na najnowszy commit**, i dopiero wypchnij go:
    ```bash
    git tag -a vX.Y.Z -m "a-rgb X.Y.Z"
-   git rev-parse --short "vX.Y.Z^{commit}" HEAD   # oba SHA muszą być takie same
+   [ "$(git rev-parse "vX.Y.Z^{commit}")" = "$(git rev-parse HEAD)" ] && echo ZGODNE || echo RÓŻNE   # musi być ZGODNE
    git push origin vX.Y.Z
    ```
    Release powstaje z commita, na który wskazuje tag. Tag założony przed zatwierdzeniem ostatnich zmian wydaje starą wersję (tak było z `v0.1.0`, którego paczki nie zawierały poprawki z `edd3421` — dlatego powstało `v0.1.1`).
