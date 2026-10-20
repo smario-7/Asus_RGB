@@ -29,3 +29,6 @@ rustc-ice-*.txt
 # Added by cargo
 
 /target
+
+# paczki budowane lokalnie (packaging/build-*.sh)
+/dist

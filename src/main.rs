@@ -5,8 +5,15 @@ mod sysfs;
 
 use cli::{Brightness, Command};
 use model::Settings;
+use std::io::{self, Write};
 use std::process::ExitCode;
 use sysfs::Led;
+
+/// Wypisuje na stdout bez paniki: zamknięty potok (`a-rgb get | head -1`) albo pełny dysk
+/// nie mogą przerwać procesu (przy `panic = "abort"` kończyłoby się to SIGABRT).
+fn emit(text: &str) {
+    let _ = io::stdout().write_all(text.as_bytes());
+}
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
@@ -28,9 +35,9 @@ fn main() -> ExitCode {
 
 fn run(cmd: Command) -> Result<(), String> {
     match cmd {
-        Command::Help(None) => print!("{}", cli::help_text()),
-        Command::Help(Some(name)) => print!("{}", cli::command_help(&name)?),
-        Command::Version => println!("a-rgb {}", env!("CARGO_PKG_VERSION")),
+        Command::Help(None) => emit(&cli::help_text()),
+        Command::Help(Some(name)) => emit(&cli::command_help(&name)?),
+        Command::Version => emit(&format!("a-rgb {}\n", env!("CARGO_PKG_VERSION"))),
         Command::Brightness(b) => brightness(&Led::open()?, b)?,
         Command::Preset(p) => {
             let led = Led::open()?;
@@ -84,15 +91,19 @@ fn run(cmd: Command) -> Result<(), String> {
         }
         Command::Get => {
             let led = Led::open()?;
-            println!("jasność: {}/{}", led.brightness()?, led.max_brightness()?);
+            emit(&format!(
+                "jasność: {}/{}\n",
+                led.brightness()?,
+                led.max_brightness()?
+            ));
             match state::load() {
-                Some(s) => println!(
-                    "ostatnie ustawienie: {} {} {}",
+                Some(s) => emit(&format!(
+                    "ostatnie ustawienie: {} {} {}\n",
                     s.color,
                     s.mode.name(),
                     s.speed.name()
-                ),
-                None => println!("ostatnie ustawienie: brak (jeszcze nic nie ustawiono)"),
+                )),
+                None => emit("ostatnie ustawienie: brak (jeszcze nic nie ustawiono)\n"),
             }
         }
         Command::Restore => match state::load() {
@@ -109,7 +120,12 @@ fn apply(led: &Led, s: &Settings) -> Result<(), String> {
     if let Err(e) = state::save(s) {
         eprintln!("a-rgb: ostrzeżenie: nie zapisano stanu: {e}");
     }
-    println!("{} {} {}", s.color, s.mode.name(), s.speed.name());
+    emit(&format!(
+        "{} {} {}\n",
+        s.color,
+        s.mode.name(),
+        s.speed.name()
+    ));
     Ok(())
 }
 
@@ -118,7 +134,7 @@ fn brightness(led: &Led, b: Brightness) -> Result<(), String> {
     let cur = led.brightness()?;
     let target = match b {
         Brightness::Show => {
-            println!("{cur}/{max}");
+            emit(&format!("{cur}/{max}\n"));
             return Ok(());
         }
         Brightness::Set(v) if v > max => return Err(format!("jasność: maksimum to {max}")),
@@ -127,6 +143,6 @@ fn brightness(led: &Led, b: Brightness) -> Result<(), String> {
         Brightness::Down => cur.saturating_sub(1),
     };
     led.set_brightness(target)?;
-    println!("{target}/{max}");
+    emit(&format!("{target}/{max}\n"));
     Ok(())
 }

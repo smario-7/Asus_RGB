@@ -1,0 +1,11 @@
+#!/bin/sh
+set -e
+
+if [ "$1" = configure ]; then
+    # Nałóż regułę udev na działający LED i włącz restore po zalogowaniu (wszyscy użytkownicy).
+    udevadm control --reload >/dev/null 2>&1 || true
+    udevadm trigger --action=change --subsystem-match=leds --sysname-match='asus::kbd_backlight' >/dev/null 2>&1 || true
+    systemctl --global enable a-rgb-restore.service >/dev/null 2>&1 || true
+fi
+
+exit 0

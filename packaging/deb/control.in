@@ -1,0 +1,13 @@
+Package: a-rgb
+Version: @VERSION@
+Section: utils
+Priority: optional
+Architecture: amd64
+Installed-Size: @SIZE@
+Depends: udev
+Maintainer: smario-7 <smario-7@users.noreply.github.com>
+Homepage: https://github.com/smario-7/Asus_RGB
+Description: sterowanie podświetleniem klawiatury ASUS TUF (FX506LHB)
+ CLI ustawiające kolor, tryb, prędkość i jasność podświetlenia przez sysfs
+ sterownika asus-wmi. Bez demona i bez GUI. Testowane tylko na ASUS TUF
+ Gaming F15 FX506LHB.

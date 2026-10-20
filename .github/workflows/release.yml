@@ -1,0 +1,57 @@
+name: Release
+
+# Tag vX.Y.Z (albo vX.Y.Z-rcN jako pre-release) buduje paczki i publikuje GitHub Release.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # tworzenie Release; tylko w tym jobie
+    env:
+      TAG: ${{ github.ref_name }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Wersja w Cargo.toml musi zgadzać się z tagiem
+        run: |
+          VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
+          BASE=${TAG#v}
+          BASE=${BASE%%-*}
+          [ "$BASE" = "$VERSION" ] || { echo "tag $TAG != wersja $VERSION z Cargo.toml" >&2; exit 1; }
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+
+      - name: Testy
+        run: |
+          rustup update stable
+          rustup target add x86_64-unknown-linux-musl
+          cargo fmt --check
+          cargo clippy --all-targets --locked -- -D warnings
+          cargo test --locked
+
+      - name: Statyczna binarka
+        run: |
+          cargo build --release --locked --target x86_64-unknown-linux-musl
+          BIN=target/x86_64-unknown-linux-musl/release/a-rgb
+          ! ldd "$BIN" 2>/dev/null | grep -q "=>" || { echo "binarka nie jest statyczna" >&2; exit 1; }
+          "$BIN" --version
+
+      - name: Paczki i sumy kontrolne
+        run: |
+          BIN=target/x86_64-unknown-linux-musl/release/a-rgb
+          packaging/build-deb.sh "$BIN" dist
+          packaging/build-tarball.sh "$BIN" dist
+          (cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
+
+      - name: Opublikuj Release
+        run: |
+          PRE=""
+          case "$TAG" in *-*) PRE="--prerelease" ;; esac
+          sed "s/@VERSION@/$VERSION/g" .github/release-notes.md > notes.md
+          gh release create "$TAG" dist/* --title "a-rgb $TAG" --notes-file notes.md $PRE

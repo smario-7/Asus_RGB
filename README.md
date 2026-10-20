@@ -8,7 +8,7 @@ Małe narzędzie CLI (Rust, tylko biblioteka standardowa) do sterowania podświe
 |---|---|
 | ASUS TUF Gaming F15 FX506LHB, Ubuntu 26.04, kernel 7.0, GNOME 50 / Wayland | **przetestowane** |
 | Inne laptopy TUF z interfejsem `kbd_rgb_mode` w sysfs | nieprzetestowane; powinno działać, jeśli plik z kroku niżej istnieje |
-| Inne wersje Ubuntu | nieprzetestowane; binarka wymaga glibc ≥ 2.34 (Ubuntu 22.04+), budowanie wymaga Rusta ≥ 1.85 |
+| Inne wersje Ubuntu | nieprzetestowane na sprzęcie; paczka `.deb` instaluje się i usuwa poprawnie w kontenerach Ubuntu 22.04 i 24.04, a binarka z paczki jest statyczna (bez zależności od glibc); budowanie ze źródeł wymaga Rusta ≥ 1.85 |
 | Inne środowiska niż GNOME | polecenia działają, skróty trzeba przypisać ręcznie |
 | ROG z klawiaturą Aura (strefy / pojedyncze klawisze, USB HID) | **nieobsługiwane** |
 
@@ -22,15 +22,42 @@ Jeśli plik nie istnieje, `a-rgb` zgłosi, że laptop nie obsługuje koloru (jas
 
 ## Instalacja
 
+Gotowe paczki są na stronie [Releases](https://github.com/smario-7/Asus_RGB/releases). Każdy Release ma sumy kontrolne `SHA256SUMS`.
+
+### Z paczki .deb (Ubuntu / Debian, amd64) — zalecane
+
+```bash
+sha256sum -c SHA256SUMS --ignore-missing
+sudo apt install ./a-rgb_WERSJA_amd64.deb
+sudo usermod -aG plugdev "$USER"   # potem wyloguj się i zaloguj ponownie
+a-rgb get
+```
+
+Paczka instaluje binarkę, regułę udev i usługę `restore` (włączoną dla wszystkich użytkowników). Czego paczka **nie** robi (grupa `plugdev`, skróty GNOME, mapa Fn+←) i co dokładnie instaluje: [docs/PAKIET.md](docs/PAKIET.md). Odinstalowanie: `sudo apt remove a-rgb`.
+
+### Z archiwum tar.gz (inne dystrybucje)
+
+Statyczna binarka, bez zależności od glibc:
+
+```bash
+tar -xzf a-rgb-WERSJA-x86_64-linux.tar.gz
+cd a-rgb-WERSJA-x86_64-linux
+sudo ./install.sh              # odinstalowanie: sudo ./install.sh --uninstall
+```
+
+Skrypt instaluje `a-rgb` w `/usr/local/bin`, regułę udev i usługę `restore`; grupę `plugdev` dodaj ręcznie jak wyżej (na dystrybucjach bez grupy `plugdev` zmień grupę w regule udev).
+
+### Ze źródeł (cargo)
+
 Wymagania: `build-essential`, Rust ≥ 1.85 (przez `rustup`), grupa `plugdev` dla Twojego użytkownika.
 
 ```bash
 cargo install --path .
 ```
 
-Binarka trafia do `~/.cargo/bin/a-rgb`.
+Binarka trafia do `~/.cargo/bin/a-rgb`. Regułę udev i usługę `restore` instalujesz wtedy ręcznie:
 
-### Dostęp bez roota (reguła udev)
+#### Dostęp bez roota (reguła udev)
 
 Zapis do sysfs wymaga roota, więc reguła nadaje grupie `plugdev` prawo zapisu do `brightness` i `kbd_rgb_mode`:
 
@@ -42,7 +69,7 @@ sudo udevadm trigger --action=change --subsystem-match=leds --sysname-match='asu
 
 Sprawdzenie: `ls -l /sys/class/leds/asus::kbd_backlight/kbd_rgb_mode` powinno pokazać grupę `plugdev` i prawo zapisu dla grupy. Cofnięcie: usuń plik reguły i wykonaj `sudo udevadm control --reload`.
 
-### Przywracanie koloru po zalogowaniu
+#### Przywracanie koloru po zalogowaniu
 
 `restore` stosuje ostatnie ustawienie (jednorazowo, bez procesu w tle):
 
@@ -167,7 +194,7 @@ cargo clippy --all-targets
 cargo build --release
 ```
 
-Testy jednostkowe nie wymagają sprzętu. Test na urządzeniu: ustaw kolor i potwierdź go wzrokiem, bo `kbd_rgb_mode` jest write-only.
+Testy jednostkowe nie wymagają sprzętu. Test na urządzeniu: ustaw kolor i potwierdź go wzrokiem, bo `kbd_rgb_mode` jest write-only. Budowanie paczek i wydawanie wersji: [docs/WYDANIE.md](docs/WYDANIE.md).
 
 ## Odinstalowanie
 

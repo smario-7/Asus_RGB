@@ -2,6 +2,10 @@
 name = "a-rgb"
 version = "0.1.0"
 edition = "2024"
+description = "Sterowanie podświetleniem klawiatury ASUS TUF (FX506LHB) przez sysfs"
+license = "MIT"
+repository = "https://github.com/smario-7/Asus_RGB"
+readme = "README.md"
 
 [dependencies]
 
