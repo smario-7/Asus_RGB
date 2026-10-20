@@ -25,7 +25,7 @@ Każde polecenie ma `|| true`, więc instalacja nie padnie w środowisku bez sys
 
 Tych rzeczy nie da się bezpiecznie zrobić ze skryptów pakietu:
 
-1. **Nie dodaje użytkownika do grupy `plugdev`.** Bez tego zapis do sysfs się nie uda. Polecenie: `sudo usermod -aG plugdev "$USER"`, potem ponowne zalogowanie.
+1. **Nie dodaje użytkownika do grupy `plugdev`.** Bez tego zapis do sysfs się nie uda. `postinst` jest wykonywany jako root i nie wie, który użytkownik instaluje, więc tylko wypisuje przypomnienie. Polecenie, które dodaje do grupy tylko wtedy, gdy trzeba: `id -nG | grep -qw plugdev || sudo usermod -aG plugdev "$USER"`, potem ponowne zalogowanie (grupa obowiązuje dopiero w nowej sesji). Pierwszy użytkownik z instalatora Ubuntu zwykle już należy do `plugdev`, konta dodane później prawdopodobnie nie (niezweryfikowane).
 2. **Nie rejestruje skrótów GNOME** (Super+F5/F6/F7, Fn+←/→). Skróty są ustawieniami użytkownika; opis w [README](../README.md#skróty-klawiszowe-gnome).
 3. **Nie zmienia mapy klawiszy xkb** dla Fn+← na FX506LHB — to konfiguracja użytkownika, opisana w README.
 4. **Nie zmienia koloru na ekranie logowania ani przy starcie systemu.** Ustawia go firmware; `restore` działa dopiero po zalogowaniu.

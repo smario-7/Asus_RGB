@@ -7,7 +7,7 @@ CLI do sterowania podświetleniem klawiatury ASUS TUF (kolor, tryb, prędkość,
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
 sudo apt install ./a-rgb_@VERSION@_amd64.deb
-sudo usermod -aG plugdev "$USER"   # potem wyloguj się i zaloguj ponownie
+id -nG | grep -qw plugdev || sudo usermod -aG plugdev "$USER"   # po dodaniu do grupy zaloguj się ponownie
 a-rgb get
 ```
 

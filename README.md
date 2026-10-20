@@ -29,9 +29,11 @@ Gotowe paczki są na stronie [Releases](https://github.com/smario-7/Asus_RGB/rel
 ```bash
 sha256sum -c SHA256SUMS --ignore-missing
 sudo apt install ./a-rgb_WERSJA_amd64.deb
-sudo usermod -aG plugdev "$USER"   # potem wyloguj się i zaloguj ponownie
+id -nG | grep -qw plugdev || sudo usermod -aG plugdev "$USER"   # po dodaniu do grupy zaloguj się ponownie
 a-rgb get
 ```
+
+Zapis koloru bez `sudo` wymaga członkostwa w grupie `plugdev`. Pierwszy użytkownik z instalatora Ubuntu zwykle już w niej jest (wtedy komenda z grupą nic nie robi). Konta dodane później prawdopodobnie jej nie mają (niezweryfikowane) — im potrzebne jest `usermod` i ponowne zalogowanie, bo grupa zaczyna obowiązywać dopiero w nowej sesji.
 
 Paczka instaluje binarkę, regułę udev i usługę `restore` (włączoną dla wszystkich użytkowników). Czego paczka **nie** robi (grupa `plugdev`, skróty GNOME, mapa Fn+←) i co dokładnie instaluje: [docs/PAKIET.md](docs/PAKIET.md). Odinstalowanie: `sudo apt remove a-rgb`.
 
@@ -45,7 +47,7 @@ cd a-rgb-WERSJA-x86_64-linux
 sudo ./install.sh              # odinstalowanie: sudo ./install.sh --uninstall
 ```
 
-Skrypt instaluje `a-rgb` w `/usr/local/bin`, regułę udev i usługę `restore`; grupę `plugdev` dodaj ręcznie jak wyżej (na dystrybucjach bez grupy `plugdev` zmień grupę w regule udev).
+Skrypt instaluje `a-rgb` w `/usr/local/bin`, regułę udev i usługę `restore`; członkostwo w grupie `plugdev` sprawdź i uzupełnij tą samą komendą co wyżej (na dystrybucjach bez grupy `plugdev` zmień grupę w regule udev).
 
 ### Ze źródeł (cargo)
 

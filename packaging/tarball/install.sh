@@ -34,4 +34,5 @@ reload_udev
 command -v systemctl >/dev/null 2>&1 && systemctl --global enable a-rgb-restore.service >/dev/null 2>&1 || true
 
 echo "a-rgb zainstalowany w $PREFIX/bin."
-echo "Dodaj swojego użytkownika do grupy plugdev i zaloguj się ponownie: sudo usermod -aG plugdev \$USER"
+echo "Zapis koloru bez sudo wymaga grupy plugdev. Jako zwykły użytkownik uruchom:"
+echo "  id -nG | grep -qw plugdev || sudo usermod -aG plugdev \"\$USER\"   # po dodaniu zaloguj się ponownie"

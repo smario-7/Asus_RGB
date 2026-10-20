@@ -6,6 +6,8 @@ if [ "$1" = configure ]; then
     udevadm control --reload >/dev/null 2>&1 || true
     udevadm trigger --action=change --subsystem-match=leds --sysname-match='asus::kbd_backlight' >/dev/null 2>&1 || true
     systemctl --global enable a-rgb-restore.service >/dev/null 2>&1 || true
+    echo "a-rgb: zapis koloru bez sudo wymaga grupy plugdev. Jako zwykły użytkownik uruchom:"
+    echo "  id -nG | grep -qw plugdev || sudo usermod -aG plugdev \"\$USER\"   # po dodaniu zaloguj się ponownie"
 fi
 
 exit 0
