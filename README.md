@@ -147,7 +147,20 @@ Fn+↑/↓ obsługuje GNOME (jasność) i `a-rgb` go nie zastępuje. Jasność z
 
 ### Fn+← na FX506LHB
 
-Fn+← wysyła scancode `0xb2`, który kernel zgłasza jako `KEY_UNKNOWN` (240) i nie pozwala go przemapować przez hwdb (`EINVAL`). Klawisz można jednak przemapować na poziomie xkb, na symbol `XF86Launch3`. Nie rób tego, jeśli używasz Fn+← do czegoś innego (np. jako zastępczego Super).
+To krok opcjonalny, potrzebny tylko, jeśli chcesz użyć Fn+← jako skrótu. Fn+→ działa bez niego.
+
+**Co jest ustalone** (sprawdzone nasłuchem zdarzeń na FX506LHB): Fn+← wysyła scancode `0xb2`, który kernel zgłasza jako `KEY_UNKNOWN` (240), a Fn+→ wysyła `0xb3` zgłaszany jako `KEY_PROG4` (`XF86Launch4`). Kernel nie pozwala przemapować `0xb2` przez hwdb (`EINVAL`), więc jedyną drogą jest mapa xkb na symbol `XF86Launch3`.
+
+**Co robi Fn+← u Ciebie, zależy od Twojej konfiguracji.** Na czystej instalacji spodziewam się, że nie robi nic, bo GNOME nie zna tego kodu (nie sprawdzałem tego). Na maszynie testowej, do której system został przeniesiony z innego laptopa, klawisz działał jak Super (otwierał podgląd obszarów roboczych), ponieważ własna opcja xkb w `~/.config/xkb` mapowała ten sam kod (`<I248>`) na `Super_L`. Nie wiem, skąd ta opcja się wzięła.
+
+**Najpierw sprawdź, czy coś już mapuje ten klawisz**, żeby nie dodać drugiej opcji na ten sam kod:
+
+```bash
+gsettings get org.gnome.desktop.input-sources xkb-options
+ls ~/.config/xkb
+```
+
+Jeśli masz własną opcję dotyczącą `<I248>`, zmień w niej symbol zamiast dodawać nową. Nie rób tego, jeśli używasz Fn+← do czegoś innego (np. jako zastępczego Super). Nazwa opcji w przykładzie poniżej pochodzi z maszyny testowej i może być dowolna.
 
 `~/.config/xkb/symbols/custom`:
 
