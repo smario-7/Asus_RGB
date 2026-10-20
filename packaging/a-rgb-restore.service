@@ -1,0 +1,9 @@
+[Unit]
+Description=Przywróć ostatni kolor podświetlenia klawiatury (a-rgb)
+
+[Service]
+Type=oneshot
+ExecStart=%h/.cargo/bin/a-rgb restore
+
+[Install]
+WantedBy=default.target

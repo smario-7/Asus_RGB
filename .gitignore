@@ -25,3 +25,7 @@ rustc-ice-*.txt
 
 # snippet
 /snippets
+
+# Added by cargo
+
+/target
