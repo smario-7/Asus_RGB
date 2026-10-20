@@ -59,11 +59,13 @@ Archiwum `tar.gz` testuj tak samo (`alpine:3`, `debian:12`): rozpakuj, uruchom `
    cargo test --locked
    ```
 3. Zrób commit ze zmianą wersji i wypchnij go na `main`. Poczekaj na zielone CI (`.github/workflows/ci.yml`).
-4. Zrób tag i wypchnij go:
+4. Zrób tag, **sprawdź, że wskazuje na najnowszy commit**, i dopiero wypchnij go:
    ```bash
    git tag -a vX.Y.Z -m "a-rgb X.Y.Z"
+   git rev-parse --short "vX.Y.Z^{commit}" HEAD   # oba SHA muszą być takie same
    git push origin vX.Y.Z
    ```
+   Release powstaje z commita, na który wskazuje tag. Tag założony przed zatwierdzeniem ostatnich zmian wydaje starą wersję (tak było z `v0.1.0`, którego paczki nie zawierały poprawki z `edd3421` — dlatego powstało `v0.1.1`).
 5. Workflow `.github/workflows/release.yml` sam:
    - sprawdza, że tag zgadza się z `version` w `Cargo.toml` (tag `v0.1.0-rc1` pasuje do wersji `0.1.0`),
    - uruchamia fmt, clippy i testy,
@@ -78,9 +80,9 @@ Archiwum `tar.gz` testuj tak samo (`alpine:3`, `debian:12`): rozpakuj, uruchom `
    ```
    i zainstaluj pobrany `.deb` w czystym kontenerze jak wyżej.
 
-### Pierwsze wydanie: najpierw pre-release
+### Zmiany w workflowach: najpierw pre-release
 
-Workflowy **nie były jeszcze uruchomione na GitHubie** — sprawdzono lokalnie tylko składnię YAML i logikę kroków (wersja a tag, wykrywanie niestatycznej binarki, sumy kontrolne). Pierwszy tag powinien więc być kandydatem, np. `v0.1.0-rc1`: jeśli coś zawiedzie, naprawiasz workflow bez śladu stabilnego wydania.
+Workflowy `ci.yml` i `release.yml` przeszły na GitHubie (wydania `v0.1.0-rc1` i `v0.1.0`). Po każdej zmianie w `release.yml` lub w skryptach `packaging/` wydaj najpierw kandydata, np. `vX.Y.Z-rc1`: jeśli coś zawiedzie, naprawiasz workflow bez śladu stabilnego wydania.
 
 ### Nieudane wydanie
 
