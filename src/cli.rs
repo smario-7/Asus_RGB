@@ -1,4 +1,4 @@
-//! Parsowanie argumentów i teksty pomocy.
+//! Argument parsing and help texts.
 
 use crate::model::{Color, Mode, NAMED, Settings, Speed};
 
@@ -22,22 +22,22 @@ pub const PRESETS: [(Preset, &str, &str); 4] = [
     (
         Preset::Gaming,
         "gaming",
-        "czerwony, oddychanie (breathe), prędkość mid",
+        "red, breathing (breathe), speed mid",
     ),
-    (Preset::Work, "work", "biały, stały (static)"),
+    (Preset::Work, "work", "white, solid (static)"),
     (
         Preset::Night,
         "night",
-        "ciepły pomarańczowy ff9329, stały, jasność 1",
+        "warm orange ff9329, solid, brightness 1",
     ),
-    (Preset::Off, "off", "wyłącza podświetlenie (jasność 0)"),
+    (Preset::Off, "off", "turns the backlight off (brightness 0)"),
 ];
 
-/// Presety przełączane przez `next-preset` / `prev-preset` (same wyglądy, bez zmiany jasności).
+/// Presets cycled by `next-preset` / `prev-preset` (looks only, brightness is untouched).
 pub const CYCLE: [Preset; 3] = [Preset::Gaming, Preset::Work, Preset::Night];
 
 impl Preset {
-    /// Wygląd do ustawienia (jeśli preset go zmienia) i docelowa jasność (jeśli ją zmienia).
+    /// The look to apply (if the preset changes it) and the target brightness (if it changes that).
     pub fn spec(self) -> (Option<Settings>, Option<u8>) {
         let look = |color: Color, mode: Mode| Settings {
             color,
@@ -63,8 +63,8 @@ impl Preset {
     }
 }
 
-/// Wygląd następnego (`step` > 0) lub poprzedniego (`step` < 0) presetu z `CYCLE`;
-/// z nieznanego ustawienia zaczyna od pierwszego (do przodu) lub ostatniego (do tyłu).
+/// The look of the next (`step` > 0) or previous (`step` < 0) preset in `CYCLE`;
+/// from an unknown setting it starts at the first (forward) or the last (backward).
 pub fn cycle_preset(current: Option<Settings>, step: isize) -> Settings {
     let n = CYCLE.len() as isize;
     let pos = current.and_then(|s| CYCLE.iter().position(|p| p.spec().0 == Some(s)));
@@ -105,7 +105,7 @@ pub fn parse(args: &[String]) -> Result<Command, String> {
         if rest.is_empty() {
             Ok(cmd)
         } else {
-            Err(format!("'{first}' nie przyjmuje argumentów"))
+            Err(format!("'{first}' takes no arguments"))
         }
     };
     match first.to_ascii_lowercase().as_str() {
@@ -132,22 +132,22 @@ fn parse_brightness(rest: &[String]) -> Result<Command, String> {
         [a] if a == "-" => Brightness::Down,
         [a] => Brightness::Set(
             a.parse()
-                .map_err(|_| format!("jasność: oczekiwano liczby, '+' lub '-', podano '{a}'"))?,
+                .map_err(|_| format!("brightness: expected a number, '+' or '-', got '{a}'"))?,
         ),
-        _ => return Err("b przyjmuje jeden argument: liczbę, '+' lub '-'".into()),
+        _ => return Err("b takes one argument: a number, '+' or '-'".into()),
     };
     Ok(Command::Brightness(b))
 }
 
 fn parse_preset(rest: &[String]) -> Result<Command, String> {
     let [name] = rest else {
-        return Err(format!("preset wymaga nazwy: {}", preset_names()));
+        return Err(format!("preset needs a name: {}", preset_names()));
     };
     PRESETS
         .iter()
         .find(|(_, n, _)| n.eq_ignore_ascii_case(name))
         .map(|(p, _, _)| Command::Preset(*p))
-        .ok_or_else(|| format!("nieznany preset '{name}' (dostępne: {})", preset_names()))
+        .ok_or_else(|| format!("unknown preset '{name}' (available: {})", preset_names()))
 }
 
 fn preset_names() -> String {
@@ -158,20 +158,20 @@ fn preset_names() -> String {
         .join(", ")
 }
 
-/// `[kolor] [tryb] [prędkość]` w dowolnej kolejności; brakujące pola bierzemy z zapisanego stanu.
+/// `[color] [mode] [speed]` in any order; missing fields are taken from the saved state.
 fn parse_appearance(args: &[String]) -> Result<Command, String> {
     let (mut color, mut mode, mut speed) = (None, None, None);
     for a in args {
         if let Some(m) = Mode::parse(a) {
             if mode.replace(m).is_some() {
-                return Err("podano dwa tryby".into());
+                return Err("two modes given".into());
             }
         } else if let Some(s) = Speed::parse(a) {
             if speed.replace(s).is_some() {
-                return Err("podano dwie prędkości".into());
+                return Err("two speeds given".into());
             }
         } else if color.replace(Color::parse(a)?).is_some() {
-            return Err("podano dwa kolory".into());
+            return Err("two colors given".into());
         }
     }
     Ok(Command::Appearance { color, mode, speed })
@@ -186,121 +186,121 @@ struct CmdDoc {
 
 const COMMANDS: &[CmdDoc] = &[
     CmdDoc {
-        name: "kolor",
-        usage: "a-rgb [KOLOR] [TRYB] [PRĘDKOŚĆ]",
-        short: "ustaw kolor, tryb i prędkość (kolejność dowolna)",
-        long: "Pominięte pola przejmują wartości z ostatniego ustawienia (a-rgb get);\n\
-               bez zapisanego stanu start to biały, static, mid.\n\
-               KOLOR  nazwa (red orange yellow green cyan blue purple pink white) lub hex RRGGBB / #RRGGBB\n\
-               TRYB   static | breathe | cycle | pulse\n\
-               PRĘDKOŚĆ  slow | mid | fast\n\
-               Uwagi: cycle sam zmienia kolory (KOLOR jest ignorowany); pulse to szybkie oddychanie,\n\
-               PRĘDKOŚĆ nie ma na nie wpływu. Prędkość działa w breathe i cycle.\n\
-               Przykłady: a-rgb red | a-rgb ff8800 breathe fast | a-rgb cycle slow | a-rgb static",
+        name: "color",
+        usage: "a-rgb [COLOR] [MODE] [SPEED]",
+        short: "set color, mode and speed (any order)",
+        long: "Omitted fields keep the values of the last setting (a-rgb get);\n\
+               with no saved setting the start is white, static, mid.\n\
+               COLOR  name (red orange yellow green cyan blue purple pink white) or hex RRGGBB / #RRGGBB\n\
+               MODE   static | breathe | cycle | pulse\n\
+               SPEED  slow | mid | fast\n\
+               Notes: cycle changes colors by itself (COLOR is ignored); pulse is fast breathing,\n\
+               SPEED has no effect on it. Speed works in breathe and cycle.\n\
+               Examples: a-rgb red | a-rgb ff8800 breathe fast | a-rgb cycle slow | a-rgb static",
     },
     CmdDoc {
         name: "b",
         usage: "a-rgb b [0..MAX | + | -]",
-        short: "jasność klawiatury (pokaż / ustaw / zwiększ / zmniejsz)",
-        long: "Bez argumentu pokazuje jasność. Liczba ustawia ją (0 = wyłączone, MAX zwykle 3),\n\
-               '+' i '-' zmieniają o 1 w granicach 0..MAX. Używa tego samego ustawienia co Fn+↑/↓,\n\
-               jasność zapamiętuje system (systemd-backlight). Alias: brightness.",
+        short: "keyboard brightness (show / set / raise / lower)",
+        long: "With no argument it shows the brightness. A number sets it (0 = off, MAX is usually 3),\n\
+               '+' and '-' change it by 1 within 0..MAX. It uses the same setting as Fn+↑/↓,\n\
+               and the system remembers brightness (systemd-backlight). Alias: brightness.",
     },
     CmdDoc {
         name: "preset",
-        usage: "a-rgb preset NAZWA",
-        short: "gotowe ustawienia: gaming, work, night, off",
-        long: "gaming  czerwony, oddychanie, prędkość mid\n\
-               work    biały, stały\n\
-               night   ciepły pomarańczowy ff9329, stały, jasność 1\n\
-               off     wyłącza podświetlenie (jasność 0); też: a-rgb off",
+        usage: "a-rgb preset NAME",
+        short: "ready-made settings: gaming, work, night, off",
+        long: "gaming  red, breathing, speed mid\n\
+               work    white, solid\n\
+               night   warm orange ff9329, solid, brightness 1\n\
+               off     turns the backlight off (brightness 0); also: a-rgb off",
     },
     CmdDoc {
         name: "off",
         usage: "a-rgb off",
-        short: "wyłącz podświetlenie (jasność 0)",
-        long: "Skrót do 'preset off'. Włączenie: a-rgb b 1 (albo Fn+↑). Kolor i tryb pozostają zapamiętane.",
+        short: "turn the backlight off (brightness 0)",
+        long: "Shortcut for 'preset off'. To turn it back on: a-rgb b 1 (or Fn+↑). The color and mode stay remembered.",
     },
     CmdDoc {
         name: "next-color",
         usage: "a-rgb next-color",
-        short: "następny kolor z palety (skrót klawiszowy)",
-        long: "Paleta: red orange yellow green cyan blue purple pink white (potem od początku).\n\
-               Tryb i prędkość bez zmian. Kolor spoza palety zaczyna od początku palety.",
+        short: "next color in the palette (for a keyboard shortcut)",
+        long: "Palette: red orange yellow green cyan blue purple pink white (then back to the start).\n\
+               Mode and speed are unchanged. A color outside the palette starts from the beginning of the palette.",
     },
     CmdDoc {
         name: "prev-color",
         usage: "a-rgb prev-color",
-        short: "poprzedni kolor z palety (skrót klawiszowy)",
-        long: "Odwrotnie niż next-color.",
+        short: "previous color in the palette (for a keyboard shortcut)",
+        long: "The reverse of next-color.",
     },
     CmdDoc {
         name: "next-mode",
         usage: "a-rgb next-mode",
-        short: "następny tryb: static → breathe → cycle → pulse (skrót klawiszowy)",
-        long: "Kolor i prędkość bez zmian. Po pulse wraca do static.",
+        short: "next mode: static → breathe → cycle → pulse (for a keyboard shortcut)",
+        long: "Color and speed are unchanged. After pulse it wraps around to static.",
     },
     CmdDoc {
         name: "next-preset",
         usage: "a-rgb next-preset",
-        short: "następny gotowy tryb: gaming → work → night (skrót klawiszowy)",
-        long: "Przełącza same wyglądy (kolor, tryb, prędkość); jasności nie zmienia.\n\
-               Jeśli aktualne ustawienie nie jest żadnym z presetów, zaczyna od gaming.",
+        short: "next ready-made look: gaming → work → night (for a keyboard shortcut)",
+        long: "Switches only the looks (color, mode, speed); brightness is unchanged.\n\
+               If the current setting is not one of the presets, it starts from gaming.",
     },
     CmdDoc {
         name: "prev-preset",
         usage: "a-rgb prev-preset",
-        short: "poprzedni gotowy tryb: night → work → gaming (skrót klawiszowy)",
-        long: "Odwrotnie niż next-preset. Z nieznanego ustawienia zaczyna od night.",
+        short: "previous ready-made look: night → work → gaming (for a keyboard shortcut)",
+        long: "The reverse of next-preset. From an unknown setting it starts from night.",
     },
     CmdDoc {
         name: "get",
         usage: "a-rgb get",
-        short: "pokaż jasność i ostatnio zapisane ustawienie",
-        long: "Aktualnego koloru nie da się odczytać ze sprzętu — pokazywane jest ostatnie ustawienie\n\
-               wykonane przez a-rgb (plik ~/.config/a-rgb/last).",
+        short: "show the brightness and the last saved setting",
+        long: "The current color cannot be read from the hardware — what is shown is the last setting\n\
+               made by a-rgb (file ~/.config/a-rgb/last).",
     },
     CmdDoc {
         name: "restore",
         usage: "a-rgb restore",
-        short: "przywróć ostatnie ustawienie (do autostartu)",
-        long: "Stosuje zapisany kolor, tryb i prędkość. Bez zapisanego stanu nic nie robi (kod 0).\n\
-               Jasności nie rusza — przywraca ją systemd-backlight.",
+        short: "restore the last setting (for autostart)",
+        long: "Applies the saved color, mode and speed. With no saved setting it does nothing (exit code 0).\n\
+               It does not touch brightness — systemd-backlight restores that.",
     },
     CmdDoc {
         name: "help",
-        usage: "a-rgb help [POLECENIE]",
-        short: "pomoc ogólna lub szczegółowa dla polecenia (też -h, --help)",
-        long: "Przykład: a-rgb help preset",
+        usage: "a-rgb help [COMMAND]",
+        short: "general help, or details for a command (also -h, --help)",
+        long: "Example: a-rgb help preset",
     },
 ];
 
 pub fn help_text() -> String {
     let mut s = String::from(
-        "a-rgb — sterowanie podświetleniem klawiatury ASUS TUF Gaming F15 (FX506LHB)\n\n\
-         UŻYCIE\n  a-rgb [KOLOR] [TRYB] [PRĘDKOŚĆ]\n  a-rgb POLECENIE [argumenty]\n\n\
-         POLECENIA\n",
+        "a-rgb — keyboard backlight control for the ASUS TUF Gaming F15 (FX506LHB)\n\n\
+         USAGE\n  a-rgb [COLOR] [MODE] [SPEED]\n  a-rgb COMMAND [arguments]\n\n\
+         COMMANDS\n",
     );
     for c in COMMANDS {
         s.push_str(&format!("  {:<11} {}\n", c.name, c.short));
     }
-    s.push_str("\nSzczegóły: a-rgb help POLECENIE\n\nKOLORY\n  ");
+    s.push_str("\nDetails: a-rgb help COMMAND\n\nCOLORS\n  ");
     s.push_str(&NAMED.iter().map(|(n, _)| *n).collect::<Vec<_>>().join(" "));
-    s.push_str(" lub hex RRGGBB (np. ff8800, #00ff7f)\n\nTRYBY\n");
+    s.push_str(" or hex RRGGBB (e.g. ff8800, #00ff7f)\n\nMODES\n");
     s.push_str(
-        "  static   stały kolor\n  breathe  oddychanie wybranego koloru (działa prędkość)\n  \
-         cycle    płynna zmiana wszystkich kolorów (działa prędkość, kolor ignorowany)\n  \
-         pulse    szybkie oddychanie wybranego koloru (prędkość bez wpływu)\n\n\
-         PRĘDKOŚĆ\n  slow mid fast\n\nPRESETY\n",
+        "  static   solid color\n  breathe  the chosen color breathes (speed applies)\n  \
+         cycle    smooth change through all colors (speed applies, color ignored)\n  \
+         pulse    fast breathing of the chosen color (speed has no effect)\n\n\
+         SPEED\n  slow mid fast\n\nPRESETS\n",
     );
     for (_, n, d) in PRESETS {
         s.push_str(&format!("  {n:<8} {d}\n"));
     }
     s.push_str(
-        "\nPRZYKŁADY\n  a-rgb red\n  a-rgb ff8800 breathe fast\n  a-rgb cycle slow\n  a-rgb b +\n  \
-         a-rgb preset night\n\nKODY WYJŚCIA\n  0 sukces   1 błąd wykonania (np. brak uprawnień)   2 błędne argumenty\n\n\
-         PLIKI\n  ~/.config/a-rgb/last   ostatnie ustawienie (używane przez restore, next-*)\n  \
-         /sys/class/leds/asus::kbd_backlight   sterowany LED (zapis wymaga reguły udev)\n",
+        "\nEXAMPLES\n  a-rgb red\n  a-rgb ff8800 breathe fast\n  a-rgb cycle slow\n  a-rgb b +\n  \
+         a-rgb preset night\n\nEXIT CODES\n  0 success   1 runtime error (e.g. missing permissions)   2 invalid arguments\n\n\
+         FILES\n  ~/.config/a-rgb/last   last setting (used by restore, next-*)\n  \
+         /sys/class/leds/asus::kbd_backlight   the LED being controlled (writing requires the udev rule)\n",
     );
     s
 }
@@ -315,7 +315,7 @@ pub fn command_help(name: &str) -> Result<String, String> {
         .iter()
         .find(|c| c.name.eq_ignore_ascii_case(key))
         .map(|c| format!("{}\n\n{}\n\n{}\n", c.usage, c.short, c.long))
-        .ok_or_else(|| format!("brak pomocy dla '{name}' (lista: a-rgb -h)"))
+        .ok_or_else(|| format!("no help for '{name}' (list: a-rgb -h)"))
 }
 
 #[cfg(test)]
@@ -403,7 +403,7 @@ mod tests {
         assert_eq!(cycle_preset(Some(n), -1), w);
         assert_eq!(cycle_preset(None, 1), g);
         assert_eq!(cycle_preset(None, -1), n);
-        assert_eq!(cycle_preset(Some(Settings::DEFAULT), 1), n); // DEFAULT = wygląd 'work'
+        assert_eq!(cycle_preset(Some(Settings::DEFAULT), 1), n); // DEFAULT = the 'work' look
         let custom = Settings {
             color: Color::parse("0000ff").unwrap(),
             ..w

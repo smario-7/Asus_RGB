@@ -2,12 +2,12 @@
 set -e
 
 if [ "$1" = configure ]; then
-    # Nałóż regułę udev na działający LED i włącz restore po zalogowaniu (wszyscy użytkownicy).
+    # Apply the udev rule to the running LED and enable restore after login (all users).
     udevadm control --reload >/dev/null 2>&1 || true
     udevadm trigger --action=change --subsystem-match=leds --sysname-match='asus::kbd_backlight' >/dev/null 2>&1 || true
     systemctl --global enable a-rgb-restore.service >/dev/null 2>&1 || true
-    echo "a-rgb: zapis koloru bez sudo wymaga grupy plugdev. Jako zwykły użytkownik uruchom:"
-    echo "  id -nG | grep -qw plugdev || sudo usermod -aG plugdev \"\$USER\"   # po dodaniu zaloguj się ponownie"
+    echo "a-rgb: setting the color without sudo requires the plugdev group. As a regular user run:"
+    echo "  id -nG | grep -qw plugdev || sudo usermod -aG plugdev \"\$USER\"   # log in again after being added"
 fi
 
 exit 0

@@ -1,4 +1,4 @@
-//! Ostatnio ustawiony wygląd (`~/.config/a-rgb/last`) — dla `restore` i poleceń względnych.
+//! The last applied look (`~/.config/a-rgb/last`) — for `restore` and the relative commands.
 
 use crate::model::Settings;
 use std::{env, fs, path::PathBuf};
@@ -16,7 +16,7 @@ pub fn load() -> Option<Settings> {
 }
 
 pub fn save(s: &Settings) -> Result<(), String> {
-    let p = path().ok_or("nie można ustalić katalogu konfiguracji (brak HOME)")?;
+    let p = path().ok_or("cannot determine the configuration directory (HOME is not set)")?;
     if let Some(dir) = p.parent() {
         fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
     }

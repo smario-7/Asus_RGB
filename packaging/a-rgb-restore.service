@@ -1,5 +1,5 @@
 [Unit]
-Description=Przywróć ostatni kolor podświetlenia klawiatury (a-rgb)
+Description=Restore the last keyboard backlight color (a-rgb)
 
 [Service]
 Type=oneshot

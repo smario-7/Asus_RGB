@@ -1,5 +1,7 @@
 # Paczka .deb — co instaluje i czego nie robi
 
+[English](PACKAGE.md) | **Polski**
+
 ## Zawartość
 
 | Ścieżka w systemie | Źródło w repo | Rola |
@@ -7,7 +9,7 @@
 | `/usr/bin/a-rgb` | binarka musl (statyczna) | polecenie `a-rgb` |
 | `/usr/lib/udev/rules.d/99-a-rgb.rules` | `packaging/99-a-rgb.rules` | nadaje grupie `plugdev` prawo zapisu do `brightness` i `kbd_rgb_mode` |
 | `/usr/lib/systemd/user/a-rgb-restore.service` | `packaging/a-rgb-restore.service` | jednorazowo po zalogowaniu wykonuje `a-rgb restore`; `build-deb.sh` zamienia w niej `ExecStart` na `/usr/bin/a-rgb restore` |
-| `/usr/share/doc/a-rgb/{README.md,copyright}` | `README.md`, `LICENSE` | dokumentacja i licencja (MIT, format DEP-5) |
+| `/usr/share/doc/a-rgb/{README.md,README.pl.md,copyright}` | `README.md`, `README.pl.md`, `LICENSE` | dokumentacja (angielska i polska) i licencja (MIT, format DEP-5) |
 
 Metadane (`control`): pakiet `a-rgb`, architektura `amd64`, zależność `udev`. Binarka jest statyczna, więc paczka nie zależy od wersji glibc.
 
@@ -26,7 +28,7 @@ Każde polecenie ma `|| true`, więc instalacja nie padnie w środowisku bez sys
 Tych rzeczy nie da się bezpiecznie zrobić ze skryptów pakietu:
 
 1. **Nie dodaje użytkownika do grupy `plugdev`.** Bez tego zapis do sysfs się nie uda. `postinst` jest wykonywany jako root i nie wie, który użytkownik instaluje, więc tylko wypisuje przypomnienie. Polecenie, które dodaje do grupy tylko wtedy, gdy trzeba: `id -nG | grep -qw plugdev || sudo usermod -aG plugdev "$USER"`, potem ponowne zalogowanie (grupa obowiązuje dopiero w nowej sesji). Pierwszy użytkownik z instalatora Ubuntu zwykle już należy do `plugdev`, konta dodane później prawdopodobnie nie (niezweryfikowane).
-2. **Nie rejestruje skrótów GNOME** (Super+F5/F6/F7, Fn+←/→). Skróty są ustawieniami użytkownika; opis w [README](../README.md#skróty-klawiszowe-gnome).
+2. **Nie rejestruje skrótów GNOME** (Super+F5/F6/F7, Fn+←/→). Skróty są ustawieniami użytkownika; opis w [README](../README.pl.md#skróty-klawiszowe-gnome).
 3. **Nie zmienia mapy klawiszy xkb** dla Fn+← na FX506LHB — to konfiguracja użytkownika, opisana w README.
 4. **Nie zmienia koloru na ekranie logowania ani przy starcie systemu.** Ustawia go firmware; `restore` działa dopiero po zalogowaniu.
 

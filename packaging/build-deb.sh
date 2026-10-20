@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Buduje a-rgb_WERSJA_amd64.deb z gotowej binarki (dpkg-deb, bez dodatkowych narzędzi).
-# Użycie: packaging/build-deb.sh <binarka> <katalog-wyjściowy>
+# Builds a-rgb_VERSION_amd64.deb from a ready binary (dpkg-deb, no extra tools).
+# Usage: packaging/build-deb.sh <binary> <output-dir>
 set -euo pipefail
 
-BIN=${1:?podaj ścieżkę do binarki}
-OUT=${2:?podaj katalog wyjściowy}
+BIN=${1:?give the path to the binary}
+OUT=${2:?give the output directory}
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' "$ROOT/Cargo.toml" | head -1)
-[ -n "$VERSION" ] || { echo "nie znaleziono wersji w Cargo.toml" >&2; exit 1; }
+[ -n "$VERSION" ] || { echo "version not found in Cargo.toml" >&2; exit 1; }
 
 STAGE=$(mktemp -d)
 trap 'rm -rf "$STAGE"' EXIT
@@ -19,8 +19,9 @@ sed 's|^ExecStart=.*|ExecStart=/usr/bin/a-rgb restore|' "$ROOT/packaging/a-rgb-r
     > "$STAGE/usr/lib/systemd/user/a-rgb-restore.service"
 chmod 644 "$STAGE/usr/lib/systemd/user/a-rgb-restore.service"
 install -Dm644 "$ROOT/README.md" "$STAGE/usr/share/doc/a-rgb/README.md"
+install -Dm644 "$ROOT/README.pl.md" "$STAGE/usr/share/doc/a-rgb/README.pl.md"
 
-# copyright w formacie DEP-5; tekst licencji z LICENSE (puste linie -> " .")
+# copyright file in DEP-5 format; the license text comes from LICENSE (blank lines -> " .")
 {
     printf 'Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/\n'
     printf 'Upstream-Name: a-rgb\nSource: https://github.com/smario-7/Asus_RGB\n\n'

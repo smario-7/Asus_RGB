@@ -1,13 +1,15 @@
 # Wydawanie wersji a-rgb
 
+[English](RELEASING.md) | **Polski**
+
 Instrukcja dla opiekuna repozytorium: jak zbudować paczki lokalnie, jak je przetestować i jak opublikować Release na GitHubie.
 
 ## Co powstaje
 
 | Plik | Skrypt | Zawartość |
 |---|---|---|
-| `a-rgb_WERSJA_amd64.deb` | `packaging/build-deb.sh` | binarka, reguła udev, usługa `restore` (patrz [PAKIET.md](PAKIET.md)) |
-| `a-rgb-WERSJA-x86_64-linux.tar.gz` | `packaging/build-tarball.sh` | binarka, `install.sh`, reguła, jednostka, README, LICENSE |
+| `a-rgb_WERSJA_amd64.deb` | `packaging/build-deb.sh` | binarka, reguła udev, usługa `restore` (patrz [PACKAGE.pl.md](PACKAGE.pl.md)) |
+| `a-rgb-WERSJA-x86_64-linux.tar.gz` | `packaging/build-tarball.sh` | binarka, `install.sh`, reguła, jednostka, oba README (EN i PL), LICENSE |
 | `SHA256SUMS` | workflow | sumy kontrolne obu plików |
 
 Oba pliki zawierają tę samą **statyczną** binarkę zbudowaną dla celu `x86_64-unknown-linux-musl`. Dzięki temu nie zależy ona od wersji glibc w systemie. Wersja paczek pochodzi z `version` w `Cargo.toml`.

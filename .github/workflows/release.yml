@@ -1,6 +1,6 @@
 name: Release
 
-# Tag vX.Y.Z (albo vX.Y.Z-rcN jako pre-release) buduje paczki i publikuje GitHub Release.
+# A tag vX.Y.Z (or vX.Y.Z-rcN as a pre-release) builds the packages and publishes a GitHub Release.
 on:
   push:
     tags: ["v*"]
@@ -19,15 +19,15 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Wersja w Cargo.toml musi zgadzać się z tagiem
+      - name: The Cargo.toml version must match the tag
         run: |
           VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
           BASE=${TAG#v}
           BASE=${BASE%%-*}
-          [ "$BASE" = "$VERSION" ] || { echo "tag $TAG != wersja $VERSION z Cargo.toml" >&2; exit 1; }
+          [ "$BASE" = "$VERSION" ] || { echo "tag $TAG does not match Cargo.toml version $VERSION" >&2; exit 1; }
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
-      - name: Testy
+      - name: Tests
         run: |
           rustup update stable
           rustup target add x86_64-unknown-linux-musl
@@ -35,21 +35,21 @@ jobs:
           cargo clippy --all-targets --locked -- -D warnings
           cargo test --locked
 
-      - name: Statyczna binarka
+      - name: Static binary
         run: |
           cargo build --release --locked --target x86_64-unknown-linux-musl
           BIN=target/x86_64-unknown-linux-musl/release/a-rgb
-          ! ldd "$BIN" 2>/dev/null | grep -q "=>" || { echo "binarka nie jest statyczna" >&2; exit 1; }
+          ! ldd "$BIN" 2>/dev/null | grep -q "=>" || { echo "the binary is not static" >&2; exit 1; }
           "$BIN" --version
 
-      - name: Paczki i sumy kontrolne
+      - name: Packages and checksums
         run: |
           BIN=target/x86_64-unknown-linux-musl/release/a-rgb
           packaging/build-deb.sh "$BIN" dist
           packaging/build-tarball.sh "$BIN" dist
           (cd dist && sha256sum -- * > SHA256SUMS && cat SHA256SUMS)
 
-      - name: Opublikuj Release
+      - name: Publish the Release
         run: |
           PRE=""
           case "$TAG" in *-*) PRE="--prerelease" ;; esac

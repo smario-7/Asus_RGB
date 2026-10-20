@@ -1,4 +1,4 @@
-//! Typy domenowe: kolor, tryb, prędkość oraz ich zapis/odczyt.
+//! Domain types: color, mode, speed and their serialization.
 
 use std::fmt;
 
@@ -13,7 +13,7 @@ const fn rgb(r: u8, g: u8, b: u8) -> Color {
     Color { r, g, b }
 }
 
-/// Kolory nazwane; kolejność = paleta dla `next-color` / `prev-color`.
+/// Named colors; the order is the palette for `next-color` / `prev-color`.
 pub const NAMED: [(&str, Color); 9] = [
     ("red", rgb(255, 0, 0)),
     ("orange", rgb(255, 100, 0)),
@@ -36,7 +36,7 @@ impl Color {
         let hex = lower.strip_prefix('#').unwrap_or(&lower);
         if hex.len() != 6 || !hex.bytes().all(|b| b.is_ascii_hexdigit()) {
             return Err(format!(
-                "nieznany argument '{s}' (oczekiwano koloru: nazwa albo hex RRGGBB, trybu lub prędkości)"
+                "unknown argument '{s}' (expected a color: a name or hex RRGGBB, a mode or a speed)"
             ));
         }
         let v = u32::from_str_radix(hex, 16).map_err(|e| e.to_string())?;
@@ -50,7 +50,7 @@ impl fmt::Display for Color {
     }
 }
 
-/// Tryby potwierdzone na FX506LHB; wartość = kod `mode` w `kbd_rgb_mode`.
+/// Modes verified on the FX506LHB; the value is the `mode` code in `kbd_rgb_mode`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Mode {
     Static,
@@ -131,14 +131,14 @@ pub struct Settings {
 }
 
 impl Settings {
-    /// Stan startowy, gdy nie ma jeszcze zapisanego (aktualnego koloru nie da się odczytać ze sprzętu).
+    /// Initial state when nothing has been saved yet (the current color cannot be read back from the hardware).
     pub const DEFAULT: Settings = Settings {
         color: rgb(255, 255, 255),
         mode: Mode::Static,
         speed: Speed::Mid,
     };
 
-    /// Linia dla `kbd_rgb_mode`: `cmd mode r g b speed`; cmd=0 (ustaw, bez zapisu w BIOS).
+    /// Line for `kbd_rgb_mode`: `cmd mode r g b speed`; cmd=0 (set, no save to the BIOS).
     pub fn sysfs_line(&self) -> String {
         format!(
             "0 {} {} {} {} {}",
@@ -164,24 +164,24 @@ impl Settings {
         for line in text.lines().map(str::trim).filter(|l| !l.is_empty()) {
             let (k, v) = line
                 .split_once('=')
-                .ok_or_else(|| format!("zła linia stanu: '{line}'"))?;
+                .ok_or_else(|| format!("bad state line: '{line}'"))?;
             match k {
-                "mode" => mode = Some(Mode::parse(v).ok_or_else(|| format!("zły tryb: '{v}'"))?),
+                "mode" => mode = Some(Mode::parse(v).ok_or_else(|| format!("bad mode: '{v}'"))?),
                 "color" => color = Some(Color::parse(v)?),
                 "speed" => {
-                    speed = Some(Speed::parse(v).ok_or_else(|| format!("zła prędkość: '{v}'"))?)
+                    speed = Some(Speed::parse(v).ok_or_else(|| format!("bad speed: '{v}'"))?)
                 }
                 _ => {}
             }
         }
         Ok(Settings {
-            mode: mode.ok_or("brak klucza mode")?,
-            color: color.ok_or("brak klucza color")?,
-            speed: speed.ok_or("brak klucza speed")?,
+            mode: mode.ok_or("missing key: mode")?,
+            color: color.ok_or("missing key: color")?,
+            speed: speed.ok_or("missing key: speed")?,
         })
     }
 
-    /// Następny (`step` > 0) lub poprzedni (`step` < 0) kolor z palety `NAMED`.
+    /// The next (`step` > 0) or previous (`step` < 0) color in the `NAMED` palette.
     pub fn stepped_color(&self, step: isize) -> Color {
         let n = NAMED.len() as isize;
         let pos = NAMED.iter().position(|(_, c)| *c == self.color);

@@ -1,8 +1,8 @@
 [package]
 name = "a-rgb"
-version = "0.1.1"
+version = "0.2.0"
 edition = "2024"
-description = "Sterowanie podświetleniem klawiatury ASUS TUF (FX506LHB) przez sysfs"
+description = "Keyboard backlight control for ASUS TUF laptops (FX506LHB) through sysfs"
 license = "MIT"
 repository = "https://github.com/smario-7/Asus_RGB"
 readme = "README.md"

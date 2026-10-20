@@ -1,4 +1,4 @@
-//! Dostęp do LED-a klawiatury w sysfs (`/sys/class/leds/asus::kbd_backlight`).
+//! Access to the keyboard LED in sysfs (`/sys/class/leds/asus::kbd_backlight`).
 
 use crate::model::Settings;
 use std::{
@@ -15,7 +15,7 @@ pub struct Led {
 }
 
 impl Led {
-    /// Katalog można podmienić zmienną `A_RGB_SYSFS` (testy bez sprzętu).
+    /// The directory can be overridden with the `A_RGB_SYSFS` variable (testing without hardware).
     pub fn open() -> Result<Led, String> {
         let dir = env::var_os("A_RGB_SYSFS")
             .map(PathBuf::from)
@@ -26,7 +26,7 @@ impl Led {
     pub fn at(dir: PathBuf) -> Result<Led, String> {
         if !dir.is_dir() {
             return Err(format!(
-                "brak {} — czy to ASUS TUF z załadowanym sterownikiem asus-nb-wmi?",
+                "{} not found — is this an ASUS TUF with the asus-nb-wmi driver loaded?",
                 dir.display()
             ));
         }
@@ -51,7 +51,7 @@ impl Led {
 
     fn write(&self, file: &str, value: &str) -> Result<(), String> {
         let path = self.dir.join(file);
-        // Bez create: atrybut sysfs albo istnieje, albo ten sprzęt go nie obsługuje.
+        // No create: a sysfs attribute either exists or this hardware does not support it.
         OpenOptions::new()
             .write(true)
             .truncate(true)
@@ -63,25 +63,21 @@ impl Led {
     fn read_u8(&self, file: &str) -> Result<u8, String> {
         let path = self.dir.join(file);
         let text = fs::read_to_string(&path).map_err(|e| describe(&e, &path))?;
-        text.trim().parse().map_err(|_| {
-            format!(
-                "{}: nieoczekiwana zawartość '{}'",
-                path.display(),
-                text.trim()
-            )
-        })
+        text.trim()
+            .parse()
+            .map_err(|_| format!("{}: unexpected content '{}'", path.display(), text.trim()))
     }
 }
 
 fn describe(e: &io::Error, path: &std::path::Path) -> String {
     if e.kind() == io::ErrorKind::PermissionDenied {
         format!(
-            "brak uprawnień do {} — zainstaluj regułę udev (packaging/99-a-rgb.rules) i dołącz do grupy plugdev",
+            "permission denied for {} — install the udev rule (packaging/99-a-rgb.rules) and join the plugdev group",
             path.display()
         )
     } else if e.kind() == io::ErrorKind::NotFound {
         format!(
-            "brak {} — ten laptop lub kernel nie udostępnia tej funkcji (kolor wymaga ASUS TUF z interfejsem RGB w sterowniku asus-wmi)",
+            "{} not found — this laptop or kernel does not provide this feature (color needs an ASUS TUF with the RGB interface in the asus-wmi driver)",
             path.display()
         )
     } else {
@@ -127,7 +123,7 @@ mod tests {
         let (led, dir) = temp_led("norgb");
         fs::remove_file(dir.join("kbd_rgb_mode")).unwrap();
         let err = led.set_mode(&Settings::DEFAULT).unwrap_err();
-        assert!(err.contains("nie udostępnia tej funkcji"), "{err}");
+        assert!(err.contains("does not provide this feature"), "{err}");
         assert!(!dir.join("kbd_rgb_mode").exists());
         fs::remove_dir_all(dir).unwrap();
     }

@@ -1,4 +1,4 @@
-# a-rgb: zapis do podświetlenia klawiatury ASUS TUF bez roota (grupa plugdev)
+# a-rgb: lets the plugdev group write to the ASUS TUF keyboard backlight without root
 ACTION=="add|change", SUBSYSTEM=="leds", KERNEL=="asus::kbd_backlight", \
   RUN+="/bin/chgrp plugdev /sys%p/brightness /sys%p/kbd_rgb_mode", \
   RUN+="/bin/chmod g+w /sys%p/brightness /sys%p/kbd_rgb_mode"

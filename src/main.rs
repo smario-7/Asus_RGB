@@ -9,8 +9,8 @@ use std::io::{self, Write};
 use std::process::ExitCode;
 use sysfs::Led;
 
-/// Wypisuje na stdout bez paniki: zamknięty potok (`a-rgb get | head -1`) albo pełny dysk
-/// nie mogą przerwać procesu (przy `panic = "abort"` kończyłoby się to SIGABRT).
+/// Prints to stdout without panicking: a closed pipe (`a-rgb get | head -1`) or a full disk
+/// must not abort the process (with `panic = "abort"` it would end in SIGABRT).
 fn emit(text: &str) {
     let _ = io::stdout().write_all(text.as_bytes());
 }
@@ -20,7 +20,7 @@ fn main() -> ExitCode {
     let cmd = match cli::parse(&args) {
         Ok(c) => c,
         Err(e) => {
-            eprintln!("a-rgb: {e}\nPomoc: a-rgb -h");
+            eprintln!("a-rgb: {e}\nHelp: a-rgb -h");
             return ExitCode::from(2);
         }
     };
@@ -92,33 +92,33 @@ fn run(cmd: Command) -> Result<(), String> {
         Command::Get => {
             let led = Led::open()?;
             emit(&format!(
-                "jasność: {}/{}\n",
+                "brightness: {}/{}\n",
                 led.brightness()?,
                 led.max_brightness()?
             ));
             match state::load() {
                 Some(s) => emit(&format!(
-                    "ostatnie ustawienie: {} {} {}\n",
+                    "last setting: {} {} {}\n",
                     s.color,
                     s.mode.name(),
                     s.speed.name()
                 )),
-                None => emit("ostatnie ustawienie: brak (jeszcze nic nie ustawiono)\n"),
+                None => emit("last setting: none (nothing has been set yet)\n"),
             }
         }
         Command::Restore => match state::load() {
             Some(s) => Led::open()?.set_mode(&s)?,
-            None => eprintln!("a-rgb: brak zapisanego ustawienia, nic do przywrócenia"),
+            None => eprintln!("a-rgb: no saved setting, nothing to restore"),
         },
     }
     Ok(())
 }
 
-/// Zapis do sprzętu, potem zapamiętanie stanu (błąd zapisu stanu nie jest krytyczny).
+/// Write to the hardware, then remember the state (failing to save the state is not fatal).
 fn apply(led: &Led, s: &Settings) -> Result<(), String> {
     led.set_mode(s)?;
     if let Err(e) = state::save(s) {
-        eprintln!("a-rgb: ostrzeżenie: nie zapisano stanu: {e}");
+        eprintln!("a-rgb: warning: could not save the state: {e}");
     }
     emit(&format!(
         "{} {} {}\n",
@@ -137,7 +137,7 @@ fn brightness(led: &Led, b: Brightness) -> Result<(), String> {
             emit(&format!("{cur}/{max}\n"));
             return Ok(());
         }
-        Brightness::Set(v) if v > max => return Err(format!("jasność: maksimum to {max}")),
+        Brightness::Set(v) if v > max => return Err(format!("brightness: the maximum is {max}")),
         Brightness::Set(v) => v,
         Brightness::Up => (cur + 1).min(max),
         Brightness::Down => cur.saturating_sub(1),

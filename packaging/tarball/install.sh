@@ -1,7 +1,7 @@
 #!/bin/sh
-# Instalacja a-rgb z archiwum tar.gz. Uruchom jako root: sudo ./install.sh
-# Odinstalowanie:                                        sudo ./install.sh --uninstall
-# Zmienna PREFIX (domyślnie /usr/local) wskazuje katalog, w którym ląduje bin/a-rgb.
+# Installs a-rgb from the tar.gz archive. Run as root: sudo ./install.sh
+# To uninstall:                                          sudo ./install.sh --uninstall
+# The PREFIX variable (default /usr/local) sets the directory that receives bin/a-rgb.
 set -eu
 
 PREFIX=${PREFIX:-/usr/local}
@@ -9,7 +9,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 RULE=/etc/udev/rules.d/99-a-rgb.rules
 UNIT=/etc/systemd/user/a-rgb-restore.service
 
-[ "$(id -u)" -eq 0 ] || { echo "install.sh: uruchom jako root (sudo ./install.sh)" >&2; exit 1; }
+[ "$(id -u)" -eq 0 ] || { echo "install.sh: run as root (sudo ./install.sh)" >&2; exit 1; }
 
 reload_udev() {
     command -v udevadm >/dev/null 2>&1 || return 0
@@ -21,7 +21,7 @@ if [ "${1:-}" = "--uninstall" ]; then
     command -v systemctl >/dev/null 2>&1 && systemctl --global disable a-rgb-restore.service >/dev/null 2>&1 || true
     rm -f "$PREFIX/bin/a-rgb" "$RULE" "$UNIT"
     reload_udev
-    echo "a-rgb odinstalowany."
+    echo "a-rgb uninstalled."
     exit 0
 fi
 
@@ -33,6 +33,6 @@ chmod 644 "$UNIT"
 reload_udev
 command -v systemctl >/dev/null 2>&1 && systemctl --global enable a-rgb-restore.service >/dev/null 2>&1 || true
 
-echo "a-rgb zainstalowany w $PREFIX/bin."
-echo "Zapis koloru bez sudo wymaga grupy plugdev. Jako zwykły użytkownik uruchom:"
-echo "  id -nG | grep -qw plugdev || sudo usermod -aG plugdev \"\$USER\"   # po dodaniu zaloguj się ponownie"
+echo "a-rgb installed in $PREFIX/bin."
+echo "Setting the color without sudo requires the plugdev group. As a regular user run:"
+echo "  id -nG | grep -qw plugdev || sudo usermod -aG plugdev \"\$USER\"   # log in again after being added"
